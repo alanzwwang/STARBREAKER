@@ -1,0 +1,1679 @@
+/* ============================================================
+   ALAN.WANG — "DEEP SPACE LAB" DESIGN SYSTEM
+   ------------------------------------------------------------
+   This file is the control room of the whole site.
+   Want to repaint the universe? Start at the CONTROL PANEL
+   below — change a dial there and it changes everywhere.
+   ============================================================ */
+
+/* ============================================================
+   🎛️  CONTROL PANEL — change these to re-skin the whole site
+   ============================================================ */
+:root {
+  /* -- The colors of space -- */
+  --bg-deep: #070a18;        /* deep space (page background) */
+  --bg-raised: #0a1020;      /* slightly raised panels */
+  --text: #e9effd;           /* main text, like starlight */
+  --text-dim: #93a1c4;       /* quieter text, like distant stars */
+
+  /* -- Your signature color: ELECTRIC CYAN -- */
+  --accent: #22d3ee;         /* electric cyan */
+  --accent-bright: #8df2ff;  /* cyan at full power */
+  --accent-ink: #032530;     /* dark text used ON cyan buttons */
+  --accent-glow: rgba(34, 211, 238, 0.35);      /* soft glow */
+  --accent-glow-faint: rgba(34, 211, 238, 0.12);/* faint glow */
+
+  /* -- The hero name: shining gold melting into seafoam -- */
+  --shine-gold: #ffd75e;     /* gold end of the name */
+  --shine-seafoam: #5df2c0;  /* seafoam end of the name */
+
+  /* -- Star colors — real stars shine blue, white, yellow, or red -- */
+  --star-blue: #a8ccff;      /* hot young stars */
+  --star-white: #f4f7ff;     /* the classic twinkle */
+  --star-yellow: #ffe9a8;    /* sun-like stars */
+  --star-red: #ffb59e;       /* cool red dwarfs */
+
+  /* -- Glass surfaces (cards, header) -- */
+  --surface: rgba(148, 184, 255, 0.045);
+  --surface-border: rgba(148, 184, 255, 0.16);
+  --line: rgba(148, 184, 255, 0.10);            /* hairline dividers */
+
+  /* -- Type (fonts are loaded in index.html) -- */
+  --font-display: "Space Grotesk", system-ui, sans-serif; /* headlines + text */
+  --font-mono: "Space Mono", ui-monospace, monospace;     /* labels & badges */
+  --font-script: "Pacifico", cursive;                     /* project cards & accents */
+  --font-name: "Akaya Kanadaka", "Space Grotesk", sans-serif; /* the hero name */
+
+  /* -- Rounded corners -- */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-full: 999px;
+
+  /* -- A tidy spacing ladder (1rem = 16px) -- */
+  --space-2xs: 0.25rem;
+  --space-xs: 0.5rem;
+  --space-sm: 0.75rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  --space-2xl: 3rem;
+  --space-3xl: 4.5rem;
+  --space-4xl: 7rem;
+
+  /* -- Layer order: backdrop < content < header -- */
+  --z-backdrop: 0;
+  --z-content: 1;
+  --z-header: 10;
+}
+
+/* ============================================================
+   BASE — reset & ground rules
+   ============================================================ */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  color-scheme: dark;
+  scroll-behavior: smooth;
+  /* Master text dial: 112.5% grows every rem-based size on the
+     site together (≈3mm bigger). Default is 100% = 16px. */
+  font-size: 112.5%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg-deep);
+  color: var(--text);
+  font-family: var(--font-display);
+  font-size: clamp(1rem, 0.96rem + 0.2vw, 1.125rem);
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+img,
+svg {
+  max-width: 100%;
+  display: block;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--accent-bright);
+}
+
+h1,
+h2,
+h3 {
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  margin: 0;
+  font-weight: 700;
+}
+
+p {
+  margin: 0;
+}
+
+ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: var(--radius-sm);
+}
+
+/* Skip link — appears only when tabbing with the keyboard */
+.skip-link {
+  position: absolute;
+  left: var(--space-md);
+  top: -100px;
+  z-index: var(--z-header);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  border-radius: var(--radius-sm);
+  transition: top 150ms ease;
+}
+
+.skip-link:focus {
+  top: var(--space-sm);
+}
+
+/* ============================================================
+   THE SKY — starfield, nebula glow, drifting stars
+   ============================================================ */
+.space-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-backdrop);
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* Big soft glows, like a faraway nebula */
+.nebula {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(55% 45% at 80% 12%, rgba(34, 211, 238, 0.16), transparent 70%),
+    radial-gradient(45% 40% at 8% 78%, rgba(84, 112, 220, 0.14), transparent 70%);
+}
+
+/* Two layers of stars at different depths. Each layer is a tiny
+   pattern of dots that tiles across the sky and slowly drifts. */
+.stars {
+  position: absolute;
+  inset: 0;
+  background-repeat: repeat;
+}
+
+/* Far stars: a dense dusting of tiny suns. Real stars come in
+   blue, white, yellow, and red — so do these. */
+.stars--far {
+  background-image:
+    radial-gradient(1.1px 1.1px at 18px 32px, var(--star-white) 50%, transparent 52%),
+    radial-gradient(1.1px 1.1px at 52px 12px, var(--star-blue) 50%, transparent 52%),
+    radial-gradient(1.1px 1.1px at 88px 40px, var(--star-white) 50%, transparent 52%),
+    radial-gradient(1.1px 1.1px at 122px 18px, var(--star-yellow) 50%, transparent 52%),
+    radial-gradient(1.1px 1.1px at 158px 44px, var(--star-white) 50%, transparent 52%),
+    radial-gradient(1.1px 1.1px at 192px 10px, var(--star-blue) 50%, transparent 52%),
+    radial-gradient(1.1px 1.1px at 224px 26px, var(--star-white) 50%, transparent 52%),
+    radial-gradient(1.1px 1.1px at 28px 74px, var(--star-white) 50%, transparent 52%),
+    radial-gradient(1.1px 1.1px at 64px 88px, var(--star-red) 50%, transparent 52%),
+    radial-gradient(1.1px 1.1px at 100px 66px, var(--star-white) 50%, transparent 52%),
+    radial-gradient(1.1px 1.1px at 140px 92px, var(--star-blue) 50%, transparent 52%),
+    radial-gradient(1.1px 1.1px at 176px 70px, var(--star-white) 50%, transparent 52%),
+    radial-gradient(1.1px 1.1px at 214px 96px, var(--star-yellow) 50%, transparent 52%),
+    radial-gradient(1.1px 1.1px at 36px 128px, var(--star-white) 50%, transparent 52%),
+    radial-gradient(1.1px 1.1px at 76px 152px, var(--star-blue) 50%, transparent 52%),
+    radial-gradient(1.1px 1.1px at 118px 126px, var(--star-white) 50%, transparent 52%),
+    radial-gradient(1.1px 1.1px at 160px 158px, var(--star-red) 50%, transparent 52%),
+    radial-gradient(1.1px 1.1px at 204px 142px, var(--star-white) 50%, transparent 52%),
+    radial-gradient(1.1px 1.1px at 232px 166px, var(--star-blue) 50%, transparent 52%),
+    radial-gradient(1.1px 1.1px at 16px 178px, var(--star-white) 50%, transparent 52%),
+    radial-gradient(1.1px 1.1px at 58px 192px, var(--star-white) 50%, transparent 52%),
+    radial-gradient(1.1px 1.1px at 104px 168px, var(--star-yellow) 50%, transparent 52%),
+    radial-gradient(1.1px 1.1px at 148px 196px, var(--star-white) 50%, transparent 52%),
+    radial-gradient(1.1px 1.1px at 190px 182px, var(--star-blue) 50%, transparent 52%),
+    radial-gradient(1.1px 1.1px at 222px 198px, var(--star-white) 50%, transparent 52%),
+    radial-gradient(1.1px 1.1px at 10px 60px, var(--star-yellow) 50%, transparent 52%),
+    radial-gradient(1.1px 1.1px at 98px 150px, var(--star-white) 50%, transparent 52%),
+    radial-gradient(1.1px 1.1px at 170px 30px, var(--star-white) 50%, transparent 52%);
+  background-size: 240px 210px;
+  opacity: 1;
+  animation: star-drift 480s linear infinite;
+}
+
+/* Near stars: fewer, bigger, brighter — the showpieces */
+.stars--near {
+  background-image:
+    radial-gradient(1.8px 1.8px at 70px 120px, var(--star-white) 50%, transparent 52%),
+    radial-gradient(1.7px 1.7px at 300px 240px, var(--star-blue) 50%, transparent 52%),
+    radial-gradient(1.9px 1.9px at 520px 80px, var(--star-yellow) 50%, transparent 52%),
+    radial-gradient(1.8px 1.8px at 640px 400px, var(--star-red) 50%, transparent 52%),
+    radial-gradient(1.7px 1.7px at 200px 420px, var(--star-white) 50%, transparent 52%),
+    radial-gradient(1.6px 1.6px at 430px 30px, var(--star-blue) 50%, transparent 52%),
+    radial-gradient(2px 2px at 700px 220px, var(--star-white) 50%, transparent 52%),
+    radial-gradient(1.7px 1.7px at 260px 500px, var(--star-yellow) 50%, transparent 52%),
+    radial-gradient(2.2px 2.2px at 560px 300px, var(--star-white) 50%, transparent 52%),
+    radial-gradient(1.6px 1.6px at 120px 300px, var(--star-blue) 50%, transparent 52%),
+    radial-gradient(1.8px 1.8px at 660px 520px, var(--star-white) 50%, transparent 52%),
+    radial-gradient(1.7px 1.7px at 380px 470px, var(--star-red) 50%, transparent 52%),
+    radial-gradient(1.6px 1.6px at 60px 540px, var(--star-white) 50%, transparent 52%),
+    radial-gradient(1.8px 1.8px at 740px 80px, var(--star-blue) 50%, transparent 52%),
+    radial-gradient(1.6px 1.6px at 480px 180px, var(--star-yellow) 50%, transparent 52%),
+    radial-gradient(2.4px 2.4px at 340px 60px, var(--star-white) 50%, transparent 52%);
+  background-size: 760px 560px;
+  opacity: 1;
+  animation:
+    star-twinkle 6s ease-in-out infinite alternate,
+    star-drift 900s linear infinite;
+}
+
+@keyframes star-drift {
+  to {
+    background-position: 720px 360px;
+  }
+}
+
+@keyframes star-twinkle {
+  from { opacity: 0.65; }
+  to   { opacity: 1; }
+}
+
+/* ============================================================
+   LAYOUT PRIMITIVES — the building blocks
+   ============================================================ */
+.container {
+  max-width: 1080px;
+  margin-inline: auto;
+  padding-inline: clamp(var(--space-md), 4vw, var(--space-xl));
+}
+
+/* Main content sits above the sky */
+.site-header,
+main,
+.site-footer {
+  position: relative;
+  z-index: var(--z-content);
+}
+
+.section {
+  padding-block: clamp(var(--space-2xl), 8vw, var(--space-4xl));
+  border-top: 1px solid var(--line);
+}
+
+/* Two grids used by hero and about — collapse on small screens */
+.split-grid {
+  display: grid;
+  gap: var(--space-xl);
+  align-items: center;
+}
+
+.card-grid {
+  display: grid;
+  gap: var(--space-lg);
+  grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr));
+}
+
+/* ============================================================
+   TYPE STYLES
+   ============================================================ */
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: var(--space-sm);
+}
+
+.hero-title {
+  font-family: var(--font-name);
+  font-weight: 700; /* browsers embolden Akaya Kanadaka for us */
+  line-height: 1.2; /* brush strokes need a little extra headroom */
+  font-size: clamp(3.4rem, 1.85rem + 7.6vw, 6.8rem); /* ≈4mm bigger each side */
+  letter-spacing: -0.035em;
+  background: linear-gradient(
+    115deg,
+    #fff6c9 0%,                 /* shimmer highlight */
+    var(--shine-gold) 34%,      /* shining gold */
+    var(--shine-seafoam) 100%   /* bright seafoam */
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  /* a warm gold shimmer on one side, seafoam on the other */
+  filter:
+    drop-shadow(0 0 22px rgba(255, 215, 94, 0.22))
+    drop-shadow(0 0 34px rgba(93, 242, 192, 0.16));
+}
+
+/* The custom sparkle-star mashing with the name: three stars in
+   one (gold→seafoam hero sparkle plus two sidekicks), twinkling */
+.name-sparkle {
+  display: inline-block;
+  width: 0.55em;
+  height: 0.55em;
+  margin-inline-start: 0.14em;
+  vertical-align: 0.32em; /* sit on the name's optical center line */
+  animation: sparkle-twinkle 2.8s ease-in-out infinite alternate;
+}
+
+.name-sparkle svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+@keyframes sparkle-twinkle {
+  from {
+    transform: scale(0.9) rotate(-8deg);
+    opacity: 0.8;
+  }
+  to {
+    transform: scale(1.14) rotate(10deg);
+    opacity: 1;
+  }
+}
+
+.section-title {
+  font-family: var(--font-script); /* Pacifico headings */
+  font-weight: 700;
+  line-height: 1.25;
+  font-size: clamp(1.8rem, 1.5rem + 1.6vw, 2.7rem);
+  margin-bottom: var(--space-sm);
+}
+
+.section-head {
+  margin-bottom: var(--space-xl);
+}
+
+.section-note {
+  font-family: var(--font-name); /* Akaya Kanadaka subheadings */
+  font-size: 1.05rem;
+  line-height: 1.6;
+  color: var(--text-dim);
+  max-width: 56ch;
+}
+
+/* ============================================================
+   HEADER — sticky glass command deck
+   ============================================================ */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-header);
+  background: color-mix(in srgb, var(--bg-deep) 72%, transparent);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--line);
+}
+
+.header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-lg);
+  padding-block: var(--space-md);
+}
+
+.logo {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+  color: var(--text);
+  font-weight: 600;
+  font-size: 1.05rem;
+}
+
+.logo:hover {
+  color: var(--text);
+}
+
+.logo-badge {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--accent);
+  text-shadow: 0 0 12px var(--accent-glow);
+}
+
+.logo-accent {
+  color: var(--text-dim);
+}
+
+.nav-list {
+  display: flex;
+  gap: clamp(var(--space-md), 3vw, var(--space-xl));
+}
+
+.nav-link {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  position: relative;
+  padding-block: var(--space-2xs);
+}
+
+.nav-link::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -2px;
+  height: 1px;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent-glow);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 250ms ease;
+}
+
+.nav-link:hover {
+  color: var(--accent-bright);
+  text-shadow: 0 0 14px var(--accent-glow);
+}
+
+.nav-link:hover::after {
+  transform: scaleX(1);
+}
+
+/* ============================================================
+   HERO — mission control
+   ============================================================ */
+.hero {
+  padding-block: clamp(var(--space-3xl), 12vw, var(--space-4xl));
+}
+
+.hero-grid {
+  display: grid;
+  gap: var(--space-2xl);
+  align-items: center;
+}
+
+.hero-tagline {
+  color: var(--text-dim);
+  font-size: var(--text-lg, 1.25rem);
+  margin-block: var(--space-lg) var(--space-xl);
+  max-width: 46ch;
+}
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  margin-block-start: var(--space-lg);
+}
+
+/* --- The solar stage (see index.html for the globe art) ---
+   The Sun sits parked at the heart of the big dashed line; Earth —
+   with the Moon in tow — rides that line around it. EARTH ORBITS
+   THE SUN. Earth and the Moon are TRUE TO SCALE (Moon = 27.3% of
+   Earth); distances are a diagram, not to scale. */
+.hero-art {
+  display: grid;
+  place-items: center;
+  min-height: 600px;
+}
+
+.planet-system {
+  position: relative;
+  width: 560px;
+  height: 560px;
+  isolation: isolate; /* orbit z-order battles stay in here */
+}
+
+/* --- Orbit tracks: the dashed lines the bodies ride on --- */
+.sun-orbit,
+.moon-orbit {
+  position: absolute;
+  inset: 0;
+}
+
+.orbit-track {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.orbit-track path {
+  fill: none;
+  stroke: rgba(147, 161, 196, 0.4);
+  stroke-width: 1;
+  stroke-dasharray: 4 5;
+}
+
+/* Sun's line gets a warm gold tint */
+.sun-orbit .orbit-track path {
+  stroke: rgba(255, 215, 120, 0.38);
+}
+
+/* --- The Sun: parked at the heart of Earth's orbit, breathing
+       softly in its own glow. In real life it's 109× Earth's
+       width — here it just rules the sky --- */
+.sun {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 38% 32%, #fffbe8 0%, #ffe083 45%, #ff9d3f 100%);
+  box-shadow:
+    0 0 48px rgba(255, 214, 94, 0.85),
+    0 0 140px rgba(255, 170, 60, 0.40),
+    0 0 320px rgba(255, 150, 50, 0.18);
+  animation: sun-breathe 7s ease-in-out infinite alternate;
+}
+
+@keyframes sun-breathe {
+  from { transform: translate(-50%, -50%) scale(1); }
+  to   { transform: translate(-50%, -50%) scale(1.05); }
+}
+
+/* --- Earth + Moon travel the big line around the Sun. NASA:
+       Earth's orbit is nearly circular (e ≈ 0.017) with the Sun
+       at its heart — the squash is just our viewing angle, and
+       the wide gap keeps Earth from ever crowding the Sun --- */
+.earth-system {
+  position: absolute;
+  width: 150px;
+  height: 150px;
+  offset-path: path("M456 242.6 A180 152 -12 0 1 104 317.4 A180 152 -12 0 1 456 242.6");
+  offset-rotate: 0deg;
+  animation: earth-revolve 80s linear infinite;
+}
+
+@keyframes earth-revolve {
+  to { offset-distance: 100%; }
+}
+
+.planet {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  translate: -50% -50%;
+  z-index: 1;
+  width: 90px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  box-shadow:
+    0 0 30px rgba(64, 150, 255, 0.30),   /* atmosphere glow */
+    0 0 90px rgba(64, 150, 255, 0.12);   /* outer halo */
+  animation: planet-bob 9s ease-in-out infinite;
+}
+
+.planet-surface {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Earth's axial tilt: the map leans while the sunlight stays put */
+.planet-surface .earth-map {
+  transform-box: view-box;
+  transform-origin: 100px 100px;
+  transform: rotate(-10deg);
+}
+
+/* Weather systems slowly circling the globe */
+.planet-surface .clouds {
+  transform-box: view-box;
+  transform-origin: 100px 100px;
+  animation: cloud-drift 80s linear infinite;
+}
+
+@keyframes cloud-drift {
+  to { transform: rotate(360deg); }
+}
+
+/* --- The Moon: 27.3% of Earth's width, true to scale. NASA:
+       its orbit is nearly circular (e ≈ 0.055) tilted 5.1°, so
+       perigee/apogee (363,300/405,500 km) only swing its size
+       ~11% — subtle, like the real thing. Still slips BEHIND
+       Earth on the far arc of the lap --- */
+.moon {
+  position: absolute;
+  z-index: 2; /* the keyframes flip this to 0 on the far arc */
+  width: 24.5px; /* = 27.3% of Earth's 90px — the true ratio */
+  aspect-ratio: 1;
+  border-radius: 50%;
+  box-shadow: 0 0 12px rgba(232, 238, 251, 0.35);
+  offset-path: path("M140.4 69.2 A62.6 60.6 5 0 1 15.7 80.2 A62.6 60.6 5 0 1 140.4 69.2");
+  offset-rotate: 0deg;
+  animation: moon-revolve 26s linear infinite;
+}
+
+.moon svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+@keyframes moon-revolve {
+  0%   { offset-distance: 0%;   scale: 1.05; z-index: 2; }
+  15%  { offset-distance: 25%;  scale: 1.06; } /* perigee: slightly closer */
+  30%  { offset-distance: 50%;  }
+  52%  { z-index: 2; }
+  54%  { z-index: 0; }                          /* slips behind Earth */
+  65%  { offset-distance: 75%;  scale: 0.95; }  /* apogee: slightly farther */
+  96%  { z-index: 0; }
+  100% { offset-distance: 100%; scale: 1.05; z-index: 2; }
+}
+
+/* --- Smaller stage for small screens --- */
+@media (max-width: 520px) {
+  .hero-art {
+    min-height: 360px;
+  }
+
+  .planet-system {
+    width: 330px;
+    height: 330px;
+  }
+
+  .sun {
+    width: 48px;
+    height: 48px;
+  }
+
+  .earth-system {
+    width: 110px;
+    height: 110px;
+    offset-path: path("M268.6 142.9 A106 89 -12 0 1 61.2 187.1 A106 89 -12 0 1 268.6 142.9");
+  }
+
+  .planet {
+    width: 70px;
+  }
+
+  .moon {
+    width: 19px; /* 27.1% of 70px — still the true ratio */
+    offset-path: path("M103.2 58.8 A46 44.5 5 0 1 11.6 50.8 A46 44.5 5 0 1 103.2 58.8");
+  }
+}
+
+@keyframes planet-bob {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-10px); }
+}
+
+/* ============================================================
+   BUTTONS
+   ============================================================ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: var(--space-sm) var(--space-lg);
+  border-radius: var(--radius-full);
+  border: 1px solid transparent;
+  transition: transform 200ms ease, box-shadow 200ms ease,
+              background-color 200ms ease, border-color 200ms ease;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: var(--accent-ink);
+  box-shadow: 0 0 22px var(--accent-glow);
+}
+
+.btn-primary:hover {
+  background: var(--accent-bright);
+  color: var(--accent-ink);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 34px var(--accent-glow);
+}
+
+.btn-ghost {
+  border-color: var(--surface-border);
+  color: var(--text);
+  background: var(--surface);
+}
+
+.btn-ghost:hover {
+  border-color: var(--accent);
+  color: var(--accent-bright);
+  transform: translateY(-2px);
+}
+
+/* ============================================================
+   CARDS & EMPTY SLOTS
+   ------------------------------------------------------------
+   .card  → ready-to-use glass card for real content later.
+   .slot  → dashed placeholder marking where content will dock.
+   When you add something real, swap class="slot" for "card".
+   ============================================================ */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  transition: transform 250ms ease, border-color 250ms ease, box-shadow 250ms ease;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+  box-shadow: 0 18px 44px -20px var(--accent-glow);
+}
+
+.slot {
+  min-height: 220px;
+  display: grid;
+  place-content: center;
+  gap: var(--space-xs);
+  text-align: center;
+  border: 1.5px dashed var(--surface-border);
+  border-radius: var(--radius-lg);
+  background-image: repeating-linear-gradient(
+    -45deg,
+    rgba(148, 184, 255, 0.03) 0 10px,
+    transparent 10px 20px
+  );
+  transition: border-color 250ms ease;
+}
+
+.slot:hover {
+  border-color: color-mix(in srgb, var(--accent) 50%, transparent);
+}
+
+.slot-tag {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.slot-note {
+  font-size: 0.9rem;
+  color: var(--text-dim);
+}
+
+/* A slot that became a launchpad for a real project */
+a.slot {
+  text-decoration: none;
+  cursor: pointer;
+}
+
+a.slot:hover .slot-note {
+  color: var(--accent-bright);
+}
+
+/* ============================================================
+   PROJECT CARDS — a slot with a window display
+   ============================================================ */
+.project {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--surface);
+  text-decoration: none;
+  transition: transform 250ms ease, border-color 250ms ease, box-shadow 250ms ease;
+}
+
+.project:hover {
+  transform: translateY(-4px);
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+  box-shadow: 0 18px 44px -20px var(--accent-glow);
+}
+
+.project-media {
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+}
+
+/* Ten photos, ten identical tiles: the grid gives every photo
+   an equal 1fr cell and object-fit: cover crops each to the same
+   shape — same size, all visible, none cropped away */
+.project-media--collage {
+  aspect-ratio: 3 / 2;
+}
+
+.project-info {
+  margin-top: auto; /* keeps the info bar at the bottom of tall rows */
+  display: flex;
+  flex-wrap: wrap;  /* bigger text wraps instead of overflowing */
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-xs) var(--space-sm);
+  padding: var(--space-md) var(--space-lg);
+  border-top: 1px solid var(--line);
+}
+
+/* Bay labels: bold Akaya Kanadaka across the whole hangar —
+   filled bays and empty bays alike */
+#work .slot-tag,
+#work .slot-note {
+  font-family: var(--font-name);
+  font-weight: 700;
+  font-size: 1.15rem; /* ≈3mm wider each side */
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+
+.project .slot-note {
+  color: var(--accent-bright);
+  text-shadow:
+    0 0 6px var(--accent-glow),
+    0 0 18px var(--accent-glow-faint);
+  transition: color 200ms ease, text-shadow 200ms ease;
+}
+
+.project:hover .slot-note {
+  color: #ffffff;
+  text-shadow:
+    0 0 8px var(--accent-glow),
+    0 0 26px var(--accent-glow);
+}
+
+/* --- The collage: one photo from each of the ten disasters --- */
+.collage {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 2px;
+  width: 100%;
+  height: 100%;
+}
+
+.collage img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 300ms ease;
+}
+
+.project:hover .collage img {
+  transform: scale(1.06);
+}
+
+/* --- ObbyGame card: a mini replica of the game's own start
+       screen, recreated with its real colors and fonts --- */
+.obby-screen {
+  aspect-ratio: auto;      /* size to the content — nothing gets clipped */
+  min-height: 12.5rem;
+  display: grid;
+  place-content: center;
+  gap: 2px;
+  text-align: center;
+  padding: var(--space-lg);
+  background: linear-gradient(135deg, #aee9ff 0%, #d7c6ff 50%, #ffd6f5 100%);
+}
+
+.obby-title {
+  font-family: var(--font-script);
+  font-weight: 400;
+  font-size: clamp(1rem, 2vw, 1.35rem);
+  letter-spacing: 0;
+  line-height: 1.25;
+  color: #ff5fa2;
+  text-shadow: 2px 2px 0 #fff, 4px 4px 0 rgba(0, 0, 0, 0.08);
+}
+
+.obby-sub {
+  font-family: "Baloo 2", var(--font-display);
+  font-weight: 800;
+  font-size: 0.85rem;
+  color: #7a5fc0;
+}
+
+.obby-stage {
+  width: min(100%, 170px);
+  aspect-ratio: 2 / 1;
+  margin-block-start: 8px;
+  margin-inline: auto;
+  position: relative;
+  display: grid;
+  place-items: center;
+  background: #87ceeb;
+  border: 4px solid #fff;
+  border-radius: 14px;
+  box-shadow: 0 10px 24px rgba(90, 60, 160, 0.25);
+}
+
+.obby-play {
+  font-family: "Baloo 2", var(--font-display);
+  font-weight: 800;
+  font-size: 0.95rem;
+  letter-spacing: 0.05em;
+  color: #fff;
+  background: linear-gradient(180deg, #ff8fb3, #ff5fa2);
+  padding: 4px 18px;
+  border-radius: var(--radius-full);
+  box-shadow: 0 3px 0 #d63d82, 0 5px 10px rgba(0, 0, 0, 0.2);
+}
+
+/* --- Buck Tycoon card: the game's money-green world, with a
+       floating $100 bill, small bills rising like income, and a
+       gold ticker — colors lifted from the game itself --- */
+.tycoon-screen {
+  position: relative;
+  aspect-ratio: auto;
+  min-height: 9.5rem;
+  background:
+    radial-gradient(60% 45% at 50% 110%, rgba(123, 228, 95, 0.35), transparent 70%),
+    linear-gradient(180deg, #1d2814 0%, #24331a 60%, #2f4420 72%, #3a5527 100%);
+}
+
+.bill {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: #14321a;
+  background: linear-gradient(160deg, #7be45f, #4fae37);
+  border: 2px solid rgba(255, 232, 115, 0.8);
+  border-radius: 6px;
+  box-shadow:
+    0 6px 14px rgba(0, 0, 0, 0.35),
+    inset 0 0 0 2px rgba(255, 255, 255, 0.15);
+}
+
+.bill--big {
+  width: 88px;
+  height: 46px;
+  font-size: 1.05rem;
+  left: 50%;
+  top: 44%;
+  translate: -50% -50%;
+  rotate: -6deg;
+  animation: bill-bob 3.2s ease-in-out infinite alternate;
+}
+
+.bill--small {
+  width: 52px;
+  height: 28px;
+  font-size: 0.62rem;
+  top: 100%;
+  animation: bill-rise 4.5s linear infinite;
+}
+
+.bill--s1 { left: 14%; animation-delay: -1.4s; }
+.bill--s2 { left: 72%; animation-delay: -2.9s; }
+
+@keyframes bill-bob {
+  from { transform: translateY(0); }
+  to   { transform: translateY(-6px); }
+}
+
+@keyframes bill-rise {
+  0%   { transform: translateY(0); opacity: 0; }
+  12%  { opacity: 0.9; }
+  85%  { opacity: 0.7; }
+  100% { transform: translateY(-170px); opacity: 0; }
+}
+
+.tycoon-ticker {
+  position: absolute;
+  top: 9%;
+  right: 9%;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 0.8rem;
+  color: #ffe873;
+  text-shadow: 0 0 8px rgba(255, 232, 115, 0.5);
+  animation: ticker-pulse 2s ease-in-out infinite alternate;
+}
+
+@keyframes ticker-pulse {
+  from { opacity: 0.65; }
+  to   { opacity: 1; }
+}
+
+/* --- Mathematics card: a green chalkboard scattered with real
+       advanced math — chalk white, mint, and gold on board green */
+.math-screen {
+  aspect-ratio: 16 / 10;
+}
+
+.math-screen svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.math-board text {
+  font-family: "Space Mono", "Cambria Math", Georgia, serif;
+}
+
+.math-board .drift {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: math-bob 4s ease-in-out infinite alternate;
+}
+
+.math-board .drift--slow {
+  animation-duration: 5.5s;
+}
+
+@keyframes math-bob {
+  from { translate: 0 -1.5px; }
+  to   { translate: 0 1.5px; }
+}
+
+/* --- Dark Sky card: the game's neon-dark world, with its own
+       cyan→magenta title gradient and pink→purple accents --- */
+.game-screen {
+  position: relative;
+  aspect-ratio: auto;
+  min-height: 9.5rem;
+  display: grid;
+  place-content: center;
+  gap: 4px;
+  text-align: center;
+  padding: var(--space-lg);
+  background:
+    radial-gradient(70% 55% at 50% 115%, rgba(255, 0, 127, 0.18), transparent 70%),
+    radial-gradient(60% 50% at 30% 0%, rgba(0, 255, 204, 0.10), transparent 70%),
+    linear-gradient(180deg, #0a0a14 0%, #101020 100%);
+}
+
+.game-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(0.95rem, 2vw, 1.25rem);
+  line-height: 1.2;
+  letter-spacing: 0;
+  background: linear-gradient(45deg, #00ffcc, #ff00ff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.game-sub {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  color: #ff7fd0;
+}
+
+/* Little obby platforms, neon-lit */
+.obby-floor {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-block-start: 10px;
+}
+
+.obby-floor span {
+  width: 34px;
+  height: 7px;
+  border-radius: 3px;
+  opacity: 0.9;
+}
+
+.obby-floor span:nth-child(1) { background: #00ffcc; box-shadow: 0 0 10px rgba(0, 255, 204, 0.6); }
+.obby-floor span:nth-child(2) { background: linear-gradient(90deg, #ff007f, #7f00ff); }
+.obby-floor span:nth-child(3) { background: #ff00ff; box-shadow: 0 0 10px rgba(255, 0, 255, 0.5); }
+
+/* --- Starbreaker card: the game's neon arena — cyan ship firing
+       streaks at pink and gold drones --- */
+.sb-screen {
+  position: relative;
+  aspect-ratio: auto;
+  min-height: 9.5rem;
+  display: grid;
+  place-content: center;
+  gap: 4px;
+  text-align: center;
+  padding: var(--space-lg);
+  overflow: hidden;
+  background:
+    radial-gradient(60% 60% at 80% 100%, rgba(255, 79, 216, 0.16), transparent 70%),
+    radial-gradient(55% 55% at 15% 0%, rgba(93, 242, 255, 0.14), transparent 70%),
+    #04060f;
+}
+
+.sb-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(1rem, 2.2vw, 1.35rem);
+  letter-spacing: 0.08em;
+  background: linear-gradient(180deg, #ffffff, #5df2ff 50%, #ff4fd8);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.sb-sub {
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.08em;
+  color: #ffd75e;
+}
+
+.sb-arena {
+  position: relative;
+  height: 34px;
+  margin-block-start: 8px;
+}
+
+.sb-ship {
+  position: absolute;
+  left: 18%;
+  top: 50%;
+  width: 0;
+  height: 0;
+  translate: 0 -50%;
+  border-block: 8px solid transparent;
+  border-inline-start: 18px solid #5df2ff;
+  filter: drop-shadow(0 0 6px #5df2ff);
+}
+
+.sb-shot {
+  position: absolute;
+  left: 26%;
+  top: 50%;
+  width: 14px;
+  height: 3px;
+  border-radius: 2px;
+  background: #ffffff;
+  box-shadow: 0 0 8px #5df2ff;
+  animation: sb-fly 1.1s linear infinite;
+}
+
+.sb-shot--2 { animation-delay: 0.55s; }
+
+.sb-foe {
+  position: absolute;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  border: 2px solid #ff4fd8;
+  rotate: 45deg;
+  box-shadow: 0 0 8px #ff4fd8;
+  animation: sb-bob 1.6s ease-in-out infinite alternate;
+}
+
+.sb-foe--1 { left: 72%; margin-top: -16px; }
+.sb-foe--2 { left: 80%; margin-top: -4px; border-color: #ffd75e; box-shadow: 0 0 8px #ffd75e; animation-delay: 0.4s; }
+.sb-foe--3 { left: 70%; margin-top: 8px; animation-delay: 0.8s; }
+
+@keyframes sb-fly {
+  from { translate: 0 -50%; opacity: 1; }
+  to   { translate: 400% -50%; opacity: 0; }
+}
+
+@keyframes sb-bob {
+  to { translate: 0 4px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sb-shot, .sb-foe { animation: none; }
+}
+
+/* --- The audio bay: an equalizer that dances to your music --- */
+.audio-bay {
+  aspect-ratio: auto;
+  min-height: 9.5rem;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(60% 80% at 30% 20%, rgba(34, 211, 238, 0.14), transparent 70%),
+    radial-gradient(50% 70% at 75% 80%, rgba(93, 242, 192, 0.10), transparent 70%);
+}
+
+.eq {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 56px;
+}
+
+.eq span {
+  width: 8px;
+  border-radius: 4px;
+  background: linear-gradient(180deg, var(--accent-bright), var(--accent));
+  box-shadow: 0 0 10px var(--accent-glow);
+  transform-origin: bottom;
+  animation: eq-bounce 1.1s ease-in-out infinite alternate;
+}
+
+.eq span:nth-child(1) { height: 40%; animation-delay: -0.20s; }
+.eq span:nth-child(2) { height: 75%; animation-delay: -0.60s; }
+.eq span:nth-child(3) { height: 55%; animation-delay: -0.35s; }
+.eq span:nth-child(4) { height: 90%; animation-delay: -0.80s; }
+.eq span:nth-child(5) { height: 60%; animation-delay: -0.50s; }
+
+@keyframes eq-bounce {
+  from { transform: scaleY(0.3); }
+  to   { transform: scaleY(1); }
+}
+
+/* --- Animated music-bay scenes (built like looping GIFs, but
+       pure CSS/SVG — always crisp, no image files) --- */
+.scene {
+  aspect-ratio: auto;
+  min-height: 9.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Bay 02 "A Stormy Day": dark sky, rolling clouds, rain, bolt */
+.scene--storm {
+  background: linear-gradient(180deg, #0a1024 0%, #16233f 55%, #223454 100%);
+}
+
+/* Gray storm clouds: soft gray masses with darker under-bases,
+   rolling at three depths for a slow parallax drift */
+.storm-clouds,
+.storm-clouds::before,
+.storm-clouds::after {
+  position: absolute;
+  inset: -25% -15%;
+  pointer-events: none;
+}
+
+.storm-clouds {
+  background:
+    radial-gradient(38% 30% at 30% 26%, rgba(150, 160, 178, 0.9), transparent 70%),
+    radial-gradient(46% 34% at 72% 20%, rgba(134, 145, 164, 0.85), transparent 72%),
+    radial-gradient(30% 26% at 52% 40%, rgba(112, 123, 143, 0.8), transparent 70%);
+  animation: clouds-drift 16s ease-in-out infinite alternate;
+}
+
+.storm-clouds::before {
+  content: "";
+  background:
+    radial-gradient(42% 30% at 22% 44%, rgba(96, 106, 125, 0.85), transparent 72%),
+    radial-gradient(36% 28% at 60% 50%, rgba(84, 94, 113, 0.8), transparent 70%);
+  animation: clouds-drift 24s ease-in-out infinite alternate-reverse;
+}
+
+.storm-clouds::after {
+  content: "";
+  background:
+    radial-gradient(50% 30% at 45% 12%, rgba(178, 187, 202, 0.75), transparent 72%),
+    radial-gradient(34% 22% at 80% 8%, rgba(165, 175, 192, 0.7), transparent 70%);
+  animation: clouds-drift 12s ease-in-out infinite alternate;
+}
+
+@keyframes clouds-drift {
+  from { transform: translateX(-4%); }
+  to   { transform: translateX(4%); }
+}
+
+/* The rain layer: every drop is an individual streak spawned by
+   storm.js with its own length, speed, tilt, and brightness —
+   sparse and parallel, with dark sky in between, like real rain */
+.rain {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.rain-drop {
+  position: absolute;
+  top: 0;
+  width: 1.5px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, transparent, rgba(198, 216, 240, 0.95));
+  opacity: 0;
+  animation: rain-drop-fall linear forwards;
+}
+
+.rain-drop--far {
+  width: 1px;
+  filter: blur(0.5px);
+}
+
+.rain-drop--near {
+  width: 2.5px;
+}
+
+@keyframes rain-drop-fall {
+  0% {
+    transform: translate3d(0, -30px, 0) rotate(14deg);
+    opacity: 0;
+  }
+  12% { opacity: var(--o, 0.35); }
+  88% { opacity: var(--o, 0.35); }
+  100% {
+    transform: translate3d(var(--drift, -50px), var(--fall, 260px), 0) rotate(14deg);
+    opacity: 0;
+  }
+}
+
+/* Bolts are spawned at random by storm.js — each one flickers
+   to life, forks sometimes, then fades on its own */
+.bolt-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.bolt-layer path {
+  fill: #eef6ff;
+  filter: drop-shadow(0 0 5px rgba(200, 230, 255, 0.9));
+  opacity: 0;
+  animation: bolt-life 0.5s ease-out forwards;
+}
+
+.bolt-layer .bolt-branch {
+  fill: #cfe4f7;
+}
+
+@keyframes bolt-life {
+  0%   { opacity: 0; }
+  8%   { opacity: 1; }
+  20%  { opacity: 0.25; }
+  34%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* Sky flash, fired by storm.js whenever a bolt lands */
+.scene .flash {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(60% 80% at 50% 20%, rgba(220, 240, 255, 0.5), transparent 70%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.scene .flash.on {
+  animation: flash-pop 0.3s ease-out;
+}
+
+@keyframes flash-pop {
+  0%   { opacity: 0.45; }
+  100% { opacity: 0; }
+}
+
+/* Bay 01 "Hyper-Electric": night ground + rapid random strikes */
+.scene--electric {
+  background:
+    radial-gradient(70% 40% at 50% 108%, rgba(255, 170, 60, 0.20), transparent 70%),
+    linear-gradient(180deg, #05070f 0%, #0a1120 68%, #111c33 72%, #0d1526 100%);
+}
+
+/* Ground impact glow, placed wherever the bolt lands */
+.impact-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.impact-glow {
+  position: absolute;
+  bottom: 4%;
+  width: 26%;
+  aspect-ratio: 2.2 / 1;
+  translate: -50% 0;
+  border-radius: 50%;
+  background: radial-gradient(
+    50% 60% at 50% 60%,
+    rgba(190, 235, 255, 0.85),
+    rgba(255, 200, 90, 0.3) 45%,
+    transparent 75%
+  );
+  animation: impact-life 0.5s ease-out forwards;
+}
+
+@keyframes impact-life {
+  0%   { opacity: 0; transform: scale(0.5); }
+  15%  { opacity: 1; }
+  100% { opacity: 0; transform: scale(1.15); }
+}
+
+/* Info bar variant that stacks the audio player under the tag */
+.project-info--audio {
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-sm);
+}
+
+/* --- "Chatty": an endless conversation of text bubbles.
+       Messages arrive from both sides like a messaging app,
+       spawned by chat.js with random words and timing --- */
+.chat-screen {
+  display: flex;
+  align-items: flex-end;
+  aspect-ratio: auto;
+  min-height: 9.5rem;
+  background:
+    radial-gradient(60% 45% at 85% 0%, rgba(34, 211, 238, 0.08), transparent 70%),
+    linear-gradient(180deg, #0a0f1e 0%, #101a30 100%);
+}
+
+.chat-log {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 5px;
+  padding: var(--space-md);
+  min-height: 100%;
+}
+
+.chat-bubble {
+  max-width: 72%;
+  padding: 5px 12px;
+  border-radius: 14px;
+  font-size: 0.85rem;
+  line-height: 1.35;
+  opacity: 0;
+  animation: bubble-life 4.5s ease-out forwards;
+}
+
+.chat-bubble--left {
+  align-self: flex-start;
+  background: rgba(148, 184, 255, 0.14);
+  color: var(--text);
+  border-bottom-left-radius: 4px;
+}
+
+.chat-bubble--right {
+  align-self: flex-end;
+  background: linear-gradient(135deg, rgba(34, 211, 238, 0.26), rgba(93, 242, 192, 0.18));
+  border: 1px solid rgba(34, 211, 238, 0.3);
+  color: var(--accent-bright);
+  border-bottom-right-radius: 4px;
+}
+
+@keyframes bubble-life {
+  0%   { opacity: 0; transform: translateY(8px) scale(0.85); }
+  6%   { opacity: 1; transform: none; }
+  82%  { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-6px); }
+}
+
+/* The "•••" typing indicator */
+.chat-typing {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  padding: 9px 12px;
+}
+
+.chat-typing span {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--text-dim);
+  animation: typing-dot 1s ease-in-out infinite;
+}
+
+.chat-typing span:nth-child(2) { animation-delay: 0.15s; }
+.chat-typing span:nth-child(3) { animation-delay: 0.3s; }
+
+@keyframes typing-dot {
+  0%, 100% { opacity: 0.35; transform: translateY(0); }
+  50%      { opacity: 1; transform: translateY(-2px); }
+}
+
+.project-info--audio audio {
+  width: 100%;
+  height: 2.4rem;
+}
+
+/* --- Hand-drawn emoji for the bay-group titles (drawn in
+       index.html with the site's gold→seafoam palette) --- */
+.group-emoji {
+  display: inline-block;
+  width: 0.85em;
+  height: 0.85em;
+  margin-inline-end: 0.16em;
+  vertical-align: -0.06em;
+  animation: group-bob 3.2s ease-in-out infinite alternate;
+}
+
+.group-emoji svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+@keyframes group-bob {
+  from { transform: translateY(-4%) rotate(-4deg); }
+  to   { transform: translateY(4%) rotate(4deg); }
+}
+
+/* Wider slot used for text blocks (about page, etc.) */
+.slot--wide {
+  min-height: 260px;
+}
+
+/* The GitHub invitation at the end of the About section */
+.about-cta {
+  margin-block-start: var(--space-xl);
+  display: grid;
+  justify-items: center;
+  gap: var(--space-md);
+  text-align: center;
+}
+
+.about-cta-note {
+  color: var(--text-dim);
+  max-width: 46ch;
+}
+
+/* The greeting under "Behind the Work" AND the bay-group titles
+   (Music / Games / Educational): BIG, bold, bright Akaya
+   Kanadaka — one shared rule so they always match */
+.about-greeting,
+.group-title {
+  font-family: var(--font-name); /* Akaya Kanadaka, as requested */
+  font-weight: 700; /* bold */
+  font-size: 2.2rem; /* properly big */
+  line-height: 1.35;
+  letter-spacing: 0;
+  color: var(--text); /* full brightness — impossible to miss */
+}
+
+.about-greeting {
+  margin-block-start: var(--space-2xs);
+}
+
+/* Breathing room around each bay group's title */
+.group-title {
+  margin-block: var(--space-xl) var(--space-md);
+}
+
+.group-title:first-of-type {
+  margin-block-start: 0; /* the first group follows the section head */
+}
+
+.wave {
+  display: inline-block;
+  transform-origin: 70% 70%;
+  animation: wave 2.6s ease-in-out infinite;
+}
+
+@keyframes wave {
+  0%, 60%, 100% { transform: rotate(0deg); }
+  10% { transform: rotate(20deg); }
+  20% { transform: rotate(-8deg); }
+  30% { transform: rotate(20deg); }
+  40% { transform: rotate(-5deg); }
+  50% { transform: rotate(14deg); }
+}
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+.site-footer {
+  border-top: 1px solid var(--line);
+  padding-block: var(--space-xl);
+}
+
+.footer-inner {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--text-dim);
+}
+
+.footer-inner a {
+  color: var(--text-dim);
+}
+
+.footer-inner a:hover {
+  color: var(--accent-bright);
+}
+
+/* ============================================================
+   SCROLL REVEAL — elements with class="reveal" fade in.
+   main.js adds the "in" class as they enter the screen.
+   ============================================================ */
+.reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 600ms ease, transform 600ms ease;
+}
+
+.reveal.in {
+  opacity: 1;
+  transform: none;
+}
+
+/* ============================================================
+   RESPONSIVE — tighten up on small screens
+   ============================================================ */
+@media (min-width: 860px) {
+  .hero-grid {
+    grid-template-columns: 1.2fr 0.8fr;
+  }
+}
+
+@media (min-width: 820px) {
+  .about-grid {
+    grid-template-columns: 0.9fr 1.1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .logo-word {
+    display: none; /* keep just the badge when space is tight */
+  }
+
+  .hero-actions .btn {
+    flex: 1;
+    justify-content: center;
+  }
+}
+
+/* ============================================================
+   ACCESSIBILITY — calm the cosmos for anyone who needs it
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .reveal {
+    opacity: 1;
+    transform: none;
+  }
+}

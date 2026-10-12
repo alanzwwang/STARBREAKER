@@ -1,0 +1,16 @@
+{
+  "name": "alanwang-info",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite dev --host 127.0.0.1 --port 8787",
+    "build": "vite build",
+    "preview": "vite preview --host 127.0.0.1 --port 8787",
+    "deploy": "npm run build && wrangler deploy"
+  },
+  "devDependencies": {
+    "vite": "^7.2.7",
+    "wrangler": "^4.54.0"
+  }
+}
